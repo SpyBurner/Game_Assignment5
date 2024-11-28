@@ -75,5 +75,14 @@ crashlytics-build.properties
 
 [Bb]uild/
 
-[Pp]hoton
 .vscode/
+[Pp]hoton
+firebase_unity_sdk
+Firebase
+Assets/Scripts/Network/FirebaseService/google-services.json
+Assets/Scripts/Network/FirebaseService/GoogleService-Info.plist
+
+Editor Default Resources
+ExternalDependencyManager
+
+Plugins
