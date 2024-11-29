@@ -37,7 +37,8 @@ public class RoomManager : PhotonSingleton<RoomManager>
             Debug.Log("Creating offline room");
 
             RoomOptions roomOptions = new RoomOptions();
-            roomOptions.CustomRoomProperties = new ExitGames.Client.Photon.Hashtable();
+            // roomOptions.CustomRoomProperties = new ExitGames.Client.Photon.Hashtable();
+            roomOptions.MaxPlayers = 2;
             
             PhotonNetwork.CreateRoom(null, roomOptions);
             return;

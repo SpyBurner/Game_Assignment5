@@ -10,22 +10,13 @@ using TMPro;
 public class NetworkManager : PhotonSingleton<NetworkManager>
 {
     private GameObject photonStatus;
-
-    public TMP_Text userNickNameText;
-
     public TMP_Text accountText;
-
     public TMP_Text passwordText;
 
     void Start()
     {
         PhotonNetwork.OfflineMode = false;
         photonStatus = GameObject.Find("PhotonStatus");
-
-        if (userNickNameText == null)
-        {
-            throw new System.Exception("Username text is not set");
-        }
         if (accountText == null)
         {
             throw new System.Exception("Account text is not set");
@@ -41,15 +32,10 @@ public class NetworkManager : PhotonSingleton<NetworkManager>
         {
             photonStatus.GetComponent<TMP_Text>().text = PhotonNetwork.NetworkClientState.ToString();
         }
-
-        if (userNickNameText != null)
-        {
-            userNickNameText.text = PhotonNetwork.NickName;
-        }
     }
 
     public void Login() {
-        string username = userNickNameText.text;
+        string username = PlayFabManager.Instance.playerData["displayName"];
 
         if (string.IsNullOrEmpty(username))
         {
@@ -84,4 +70,14 @@ public class NetworkManager : PhotonSingleton<NetworkManager>
         base.OnDisconnected(cause);
         Debug.Log("Disconnected from server: " + cause.ToString());
     }
+
+    #region PlayFab Authentication
+    public void LoginWithPlayFab() {
+        PlayFabManager.Instance.LoginWithEmailAndPassword(accountText.text, passwordText.text);
+
+        if (PlayFabManager.Instance.isLoggedIn) {
+            Login();
+        }
+    }
+    #endregion
 }
