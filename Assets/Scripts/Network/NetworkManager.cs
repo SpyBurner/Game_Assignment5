@@ -3,66 +3,53 @@ using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
 using Photon.Realtime;
-using Firebase.Auth;
 using ExitGames.Client.Photon.StructWrapping;
 using UnityEngine.UI;
+using TMPro;
 
 public class NetworkManager : PhotonSingleton<NetworkManager>
 {
     private GameObject photonStatus;
 
-    private FirebaseManager firebaseManager;
+    public TMP_Text userNickNameText;
 
-    public Text userNameText;
+    public TMP_Text accountText;
+
+    public TMP_Text passwordText;
 
     void Start()
     {
         PhotonNetwork.OfflineMode = false;
         photonStatus = GameObject.Find("PhotonStatus");
 
-        if (firebaseManager == null)
-        {
-            firebaseManager = FirebaseManager.Instance;
-        }
-
-        if (userNameText == null)
+        if (userNickNameText == null)
         {
             throw new System.Exception("Username text is not set");
+        }
+        if (accountText == null)
+        {
+            throw new System.Exception("Account text is not set");
+        }
+        if (passwordText == null)
+        {
+            throw new System.Exception("Password text is not set");
         }
     }
 
     void Update() {
         if (photonStatus != null)
         {
-            photonStatus.GetComponent<Text>().text = PhotonNetwork.NetworkClientState.ToString();
+            photonStatus.GetComponent<TMP_Text>().text = PhotonNetwork.NetworkClientState.ToString();
         }
 
-        if (userNameText != null)
+        if (userNickNameText != null)
         {
-            userNameText.text = PhotonNetwork.NickName;
+            userNickNameText.text = PhotonNetwork.NickName;
         }
-    }
-
-    public void LoginWithFirebase(string email, string password) {
-        if (firebaseManager.GetCurrentUser() != null)
-        {
-            Debug.Log("User is already logged in.");
-            return;
-        }
-
-        firebaseManager.Login(email, password, (result) => {
-            if (!result)
-            {
-                Debug.LogError("Login with Firebase was failed.");
-            }
-            else {
-                PhotonNetwork.ConnectUsingSettings();
-            }
-        });
     }
 
     public void Login() {
-        string username = userNameText.text;
+        string username = userNickNameText.text;
 
         if (string.IsNullOrEmpty(username))
         {
@@ -73,17 +60,6 @@ public class NetworkManager : PhotonSingleton<NetworkManager>
         PhotonNetwork.NickName = username;
 
         PhotonNetwork.ConnectUsingSettings();
-    }
-
-    public void LogoutWithFirebase() {
-        if (firebaseManager.GetCurrentUser() == null)
-        {
-            Debug.Log("User is not logged in.");
-            return;
-        }
-
-        firebaseManager.Logout();
-        PhotonNetwork.Disconnect();
     }
 
     public void Logout() {
