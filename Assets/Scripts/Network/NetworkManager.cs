@@ -9,32 +9,26 @@ using TMPro;
 
 public class NetworkManager : PhotonSingleton<NetworkManager>
 {
-    private GameObject photonStatus;
-    public TMP_Text accountText;
-    public TMP_Text passwordText;
-
+    public bool isConnected = false;
+    
     void Start()
     {
-        PhotonNetwork.OfflineMode = false;
-        photonStatus = GameObject.Find("PhotonStatus");
-        if (accountText == null)
-        {
-            throw new System.Exception("Account text is not set");
-        }
-        if (passwordText == null)
-        {
-            throw new System.Exception("Password text is not set");
-        }
+
     }
 
-    void Update() {
-        if (photonStatus != null)
-        {
-            photonStatus.GetComponent<TMP_Text>().text = PhotonNetwork.NetworkClientState.ToString();
-        }
+    void Update() 
+    {
+
     }
 
-    public void Login() {
+#region PhotonConenction
+    public void ConnectToPun() {
+        if (!PlayFabManager.Instance.isLoggedIn) 
+        {
+            Debug.Log("Not logged in");
+            return;
+        }
+
         string username = PlayFabManager.Instance.playerData["displayName"];
 
         if (string.IsNullOrEmpty(username))
@@ -46,10 +40,12 @@ public class NetworkManager : PhotonSingleton<NetworkManager>
         PhotonNetwork.NickName = username;
 
         PhotonNetwork.ConnectUsingSettings();
+        isConnected = true;
     }
 
-    public void Logout() {
+    public void DisconnectPun() {
         PhotonNetwork.Disconnect();
+        isConnected = false;
     }
 
     public override void OnConnectedToMaster()
@@ -70,14 +66,18 @@ public class NetworkManager : PhotonSingleton<NetworkManager>
         base.OnDisconnected(cause);
         Debug.Log("Disconnected from server: " + cause.ToString());
     }
+#endregion
 
-    #region PlayFab Authentication
-    public void LoginWithPlayFab() {
-        PlayFabManager.Instance.LoginWithEmailAndPassword(accountText.text, passwordText.text);
 
-        if (PlayFabManager.Instance.isLoggedIn) {
-            Login();
-        }
+#region Chat
+
+#endregion
+
+
+#region PlayFab Authentication
+    public void LoginWithPlayFab() 
+    {
+
     }
-    #endregion
+#endregion
 }

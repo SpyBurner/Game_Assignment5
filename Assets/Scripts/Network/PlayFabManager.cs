@@ -9,7 +9,7 @@ using System.Security.Authentication;
 
 public class PlayFabManager : PersistentSingleton<PlayFabManager>
 {
-    private string playFabId;
+    public string playFabId;
     public Dictionary<string, string> playerData = new Dictionary<string, string>();
     public bool isLoggedIn = false;
 

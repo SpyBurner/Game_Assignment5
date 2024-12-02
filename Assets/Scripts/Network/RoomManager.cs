@@ -5,9 +5,18 @@ using UnityEngine.UI;
 using Photon.Pun;
 using Unity.VisualScripting;
 using Photon.Realtime;
-public class RoomManager : PhotonSingleton<RoomManager>
+using System;
+using HashTable = ExitGames.Client.Photon.Hashtable;
+
+public class RoomManager : PersistentPhotonSingleton<RoomManager>
 {
-    public Text roomNameText;
+    public string currentRoomName;
+    public List<RoomInfo> roomList;
+    public List<Player> playerList;
+    private readonly TypedLobby sqlLobby = new TypedLobby("SQLLOBBY", LobbyType.SqlLobby);
+    public const string ELO_PROP_KEY = "elo";
+    public const string MAP_PROP_KEY = "map";
+    public const byte MAX_PLAYERS = 2;
 
     // Start is called before the first frame update
     void Start()
@@ -18,58 +27,38 @@ public class RoomManager : PhotonSingleton<RoomManager>
     // Update is called once per frame
     void Update()
     {
-        if (roomNameText != null && PhotonNetwork.InRoom)
+        if (String.IsNullOrEmpty(currentRoomName) && PhotonNetwork.InRoom)
         {
-            roomNameText.text = PhotonNetwork.CurrentRoom.Name;
+            currentRoomName = PhotonNetwork.CurrentRoom.Name;
         }
     }
 
-    public void SinglePlayer()
-    {
-        PhotonNetwork.OfflineMode = true;
-        CreateRoom();
-    }
-
-    public void CreateRoom()
+    public void CreateRoom(string roomName, Hashtable roomProperties)
     {
         if (PhotonNetwork.OfflineMode)
         {
-            Debug.Log("Creating offline room");
-
-            RoomOptions roomOptions = new RoomOptions();
-            // roomOptions.CustomRoomProperties = new ExitGames.Client.Photon.Hashtable();
-            roomOptions.MaxPlayers = 2;
-            
-            PhotonNetwork.CreateRoom(null, roomOptions);
+            Debug.Log("Player is offline");
             return;
         }
-
-        if (roomNameText == null)
-        {
-            return;
-        }
-
-        string roomName = roomNameText.text;
-
+        
         if (string.IsNullOrEmpty(roomName))
         {
             Debug.Log("Room name is empty");
             return;
         }
 
-        PhotonNetwork.CreateRoom(roomName);
+        RoomOptions roomOptions = new RoomOptions
+        {
+            MaxPlayers = MAX_PLAYERS
+        };
+        roomOptions.CustomRoomProperties = new HashTable{ { ELO_PROP_KEY, roomProperties["elo"] }, { MAP_PROP_KEY, roomProperties["map"]} };
+        roomOptions.CustomRoomPropertiesForLobby = new string[] { ELO_PROP_KEY, MAP_PROP_KEY };
+
+        PhotonNetwork.CreateRoom(roomName,  roomOptions);
     }
 
-    public void JoinRoom()
+    public void JoinRoom(string roomName)
     {
-        if (roomNameText == null)
-        {
-            Debug.Log("Room name text is null");
-            return;
-        }
-        string roomName = roomNameText.text;
-
-
         if (string.IsNullOrEmpty(roomName))
         {
             Debug.Log("Room name is empty");
@@ -97,16 +86,47 @@ public class RoomManager : PhotonSingleton<RoomManager>
         Debug.Log("Created room");
     }
 
+    public override void OnCreateRoomFailed(short returnCode, string message)
+    {
+        base.OnCreateRoomFailed(returnCode, message);
+        Debug.Log("Create room failed: " + message);
+    }
+
     public override void OnJoinedRoom()
     {
         base.OnJoinedRoom();
         Debug.Log("Joined room");
-        PhotonNetwork.LoadLevel("Selection");
+        PhotonNetwork.LoadLevel("");
     }
 
     public override void OnJoinRoomFailed(short returnCode, string message)
     {
         base.OnJoinRoomFailed(returnCode, message);
         Debug.Log("Join room failed: " + message);
+    }
+
+    public void GetRoomList(string sqlFilter = "") {
+        if (PhotonNetwork.InRoom)
+        {
+            Debug.Log("Already in room");
+            return;
+        }
+
+        PhotonNetwork.GetCustomRoomList(TypedLobby.Default, sqlFilter);
+    }
+
+    public override void OnRoomListUpdate(List<RoomInfo> roomList) {
+        base.OnRoomListUpdate(roomList);
+
+        if (roomList.Count > 0)
+        {
+            this.roomList.Clear();
+        }
+
+        foreach (RoomInfo roomInfo in roomList)
+        {
+            this.roomList.Add(roomInfo);
+        }
+        Debug.Log("Room list updated");
     }
 }
